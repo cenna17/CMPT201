@@ -62,3 +62,13 @@ Command format to use fuzzer to generate inputs to test func_f:
 For A5 I use: 
 
 `clang -sanitize=undefined, fuzzer -g fuzzer.c func_f.c -o test_func_with_myfuzzer`
+
+The output of a fuzzer is hard to read, heres the [explaination](https://llvm.org/docs/LibFuzzer.html#output)
+
+## Debuggers
+
+[Tutorial of GDB](https://www.cprogramming.com/gdb.html)
+
+* Additional Resources: 
+    - [GNU Debugger: Getting Started](https://developers.redhat.com/articles/the-gdb-developers-gnu-debugger-tutorial-part-1-getting-started-with-the-debugger)
+    - [About Breakpoints](https://developers.redhat.com/articles/2022/11/08/introduction-debug-events-learn-how-use-breakpoints)
