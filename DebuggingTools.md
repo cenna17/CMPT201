@@ -25,3 +25,11 @@
 `Dynamic Check` - Done at run time `<-` Sanitizers ar this group
 
 ## Fuzzers
+
+* Resource: [libFuzzer](https://llvm.org/docs/LibFuzzer.html)
+
+When we get a bug report from sanitizers, we can try to repeat this error => identify it => fix it.  But how do we know 
+what value to pass?  
+
+`Fuzzers` are input generators.  Think of it as a mini side program that keeps running to generate new inputs that will 
+test the program we are working on by seeing if new generated inputs triggers any problems. `For example:` [Google's OSS Fuzz Project](https://github.com/google/oss-fuzz)
