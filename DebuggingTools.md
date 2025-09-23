@@ -33,3 +33,32 @@ what value to pass?
 
 `Fuzzers` are input generators.  Think of it as a mini side program that keeps running to generate new inputs that will 
 test the program we are working on by seeing if new generated inputs triggers any problems. `For example:` [Google's OSS Fuzz Project](https://github.com/google/oss-fuzz)
+
+To make our mini-fuzzer program with libFuzzer, we need to make a  `fuzz target` [function](https://llvm.org/docs/LibFuzzer.html#fuzz-target)
+
+* Note: Fuzzers main function is to generate inputs, its the programmers responsibility to detect the bugs from these inputs (ie. using sanitizers, gdb debugger etc)
+
+### Using Fuzzers
+
+* Suppose we want to link a fuzzer function to test another function
+
+```
+//fuzzer.c  file            | // func_f.c file
+                            |
+-> func_f header here       | test_func(num){    // say this function returns the abs val of num
+                            |   ...
+-> fuzz_func{               |   }
+    .                       |
+    .                       |
+    call func_f(num)        |
+}                           |
+
+```
+
+Command format to use fuzzer to generate inputs to test func_f:
+
+`clang -sanitize=<sanitizer-flag to incorporate>, fuzzer -g <name of fuzzer file> <test_func file> -o output_file`
+
+For A5 I use: 
+
+`clang -sanitize=undefined, fuzzer -g fuzzer.c func_f.c -o test_func_with_myfuzzer`
