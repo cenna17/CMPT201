@@ -73,7 +73,7 @@ Before examining the diagram in more detail, there are a few things to note.
 
 * The memory layout:
     1) Is segmented (kernel address, stack, etc)
-    3) Determines the memory space that a program can use. Notice that the size of the 
+    2) Determines the memory space that a program can use. Notice that the size of the 
         diagram is `finite`. This means that the memory space your program can use is also finite.
 
 * `fork()` a child process, this whole layout is cloned, i.e., the child becomes an exact
@@ -81,50 +81,66 @@ Before examining the diagram in more detail, there are a few things to note.
 * `Byte-addressable memory` - Each memory address identifies a single byte.
 * The memory address space starts from 0.
 
-### C
+### C - About Pointers
 * Pointers store a memory address eg) `int *ptr = 0` => `ptr` now holds the memory
   address 0 as its value. There are a few things to note here.
-    * If you define a pointer, e.g., `int *ptr;`, what you're saying is that `ptr` is a variable of
-      the type `int *` (which is an integer pointer type). This is similar to how `int i` means that
-      `i` is a variable of the type `int`.
-    * Just like any other variables, a pointer has a size limit according to the size of its type.
-      For example, we know that if a variable called `i` is of the type `int32_t`, `i`'s value can
-      only range from the minimum value to the maximum value that `int32_t` can represent. This
-      range is determined by the size of the type `int32_t`. Since it uses 32 bits, the minimum
-      value is -2^31 (`INT32_MIN`) and the maximum value is 2^31-1 (`INT32_MAX`). Similarly, if a
-      variable called `ptr` is of the type `int *`, its value can only range from the minimum value
-      to the maximum value that `int *` can represent. All pointer types (`int *`, `char *`, `void
-      *`, etc.) are of the same size, and they are typically either 32 bits or 64 bits, depending on
-      what CPU you use. If you use a 32-bit CPU, it is 32 bits. If you use a 64-bit CPU, it is 64
-      bits. For example, if the pointer types are represented as 32 bits, their values can only be
-      between 0 and 2^32-1.
-    * What this means is that the size of a pointer type effectively limits the size of the memory
-      space that a program can use. For a 32-bit pointer, since its value can only range between 0
+    * `T *ptr` means `ptr` is a variable of `type T` 
+        `eg) int *ptr => ptr is of type int*`
+
+    * A pointer has a size limit according to the size of its type.
+        eg) The values of `int32_t i` uses 32-bits 
+                => the range for `i` is -2^31 (`INT32_MIN`) to 2^31-1 (`INT32_MAX`). 
+        
+        eg) `int* ptr`, its value can only range from the minimum value
+    
+    All pointer types (`int *`, `char *`, `void *`, etc.) are of the same size, 
+    and they are typically either 32 bits or 64 bits, depending on what CPU you use. 
+    If you use a 32-bit CPU, it is 32 bits. If you use a 64-bit CPU, it is 64 bits. 
+        
+    For example, if the pointer types are represented as 32 bits, their values can only be between 0 and 2^32-1.
+
+    * This effectively means the size of a pointer type limits the size of the memory
+      space that a program can use. 
+      
+      For a 32-bit pointer, since its value can only range between 0
       and 2^32-1, the range of memory addresses must be between 0 and 2^32-1. This effectively
       limits the size of the memory address space. Since each address is byte addressable and 2^32
       is 4 * 2^30, a 32-bit pointer can identify 4GB (gigabytes) of memory. In case of a 64-bit
       pointer (16 * 2^60), it is 16 exabytes.
-* Since a pointer value is an address, you can perform *pointer arithmetic*, meaning you can use
-  arithmetic operators to change the value of a pointer. You can use four operators, `+`, `-`, `++`,
-  and `--`. They *almost* work as expected, e.g., `+` increments the value of a pointer and `-`
-  decrements the value of a pointer. But you have to keep in mind the following two points.
-    * Meaning of "one": If you have a pointer variable `ptr` and increment it by one, e.g., `ptr +
-      1`, it *does not* mean that you are adding one to the address value. The meaning of one in
-      pointer arithmetic is *the size of the pointer type*. For example, if your pointer type is
-      `int` (i.e., if you declare `int *ptr`), `ptr + 1` increments the address value in `ptr` by
-      the size of `int`, i.e., 4 bytes. If your pointer type is `char` (i.e., if you declare `char
-      *ptr`), `ptr + 1` increments the address value in `ptr` by the size of `char`, i.e., 1 byte.
-      This applies to all operators (`+`, `-`, `++`, and `--`). You always need to be aware of the
-      size of your type and use it as the unit of calculation.
-    * Pointers and arrays: Using pointer arithmetic, you can use pointers and arrays
-      interchangeably. For example, let's assume you declare `int *address` in your code. Here,
-      `address[i]` works exactly the same as `*(address + i)`. They both allow you to access the
-      memory location that is *i* integers higher from the memory location pointed to by `address`.
-      In other words, it is as if you declared an array, `int address[]`,  instead of a pointer,
-      `int *address`, since arrays and pointers are interchangeable.
 
-Let's examine the address layout segment-by-segment from the bottom. There are some activities you
-need to do, so don't forget to start recording with `record`.
+* We can `use + OR - operations` to move the address a pointer points to in memory.
+    => Thereby, changing the thing that the pointer is pointing to.
+
+``` Examples:
+int num = 0; 
+int* INT_ptr = &num
+
+INT_ptr + 1 // increases the address value in ptr by SIZE OF POINTER TYPE => int (4 bytes) 
+
+char* CHAR_ptr = &some_char
+
+INT_ptr + 1 // increases the address value in ptr by SIZE OF POINTER TYPE => size char (1 bytes) 
+
+================================================================================================
+RECALL: Dereference pointers to change value that the ptr is pointing to
+
+*INT_ptr = *INT_ptr + 1 // num => 0 + 1 = 1
+
+(*INT_ptr)++ will also work
+```
+#### Pointers && Arrays
+    Using pointer arithmetic, you can use pointers and arrays
+    interchangeably. 
+    
+    ``` Example: 
+    int *address    // address[i] will works exactly the same as *(address + i). 
+    
+    They both allow you to access the memory location that is *i* integers higher from the memory location pointed to by `address`.
+
+    => It is as if you declared an array:
+        int address[]  instead of a pointer, int *address 
+        
+        since arrays and pointers are interchangeable.
 
 ## Task 0: Understanding the Text Segment
 
