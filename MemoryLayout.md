@@ -148,7 +148,7 @@ RECALL: Dereference pointers to change value that the ptr is pointing to
         
         since arrays and pointers are interchangeable.
 
-## Understanding the Text Segment (Bottomost Layer) - [MEMORY LAYOUT DIAGRAM](memory_layout_diagram.md)
+## Understanding the Text Segment (Bottomost Layer) - [MEMORY LAYOUT DIAGRAM](src/memory_layout_diagram.md)
 
 The OS loads the program itself to this segment => i.e., the text segment contains the (compiled) code
 of the program. This means that your code resides somewhere in memory when you're running your
@@ -219,7 +219,7 @@ Look for the text section and look for the matching bytes that you get from runn
 will find that all 64 bytes are present in the output of `objdump` in exactly the same order as our
 program prints out.
 
-## Understanding the Data and BSS Segments (Layer Above Text) - [MEMORY LAYOUT DIAGRAM](memory_layout_diagram.md)
+## Understanding the Data and BSS Segments (Layer Above Text) - [MEMORY LAYOUT DIAGRAM](src/memory_layout_diagram.md)
 
 * Data and BSS segments store the values for global or static variables in a program. 
 
@@ -237,10 +237,11 @@ static char *example_string;` // gets stored in the BSS segment.
 ```c
 #include <stdio.h>
 
-char bss_char0;                                                 |                       
-char bss_char1;                                                 |
-char data_char0 = '0';                                          |
-char data_char1 = '1';                                          |
+char bss_char0;                                                 |   // Each variable will take up EXACTLY ONE byte              
+char bss_char1;                                                 |   // b/c 'char' type has the size of one byte
+char data_char0 = '0';                                          |   
+char data_char1 = '1';                                          |  
+                                                                |
                                                                 |               OUTPUT
 int main() {                                                    |
   printf("data_char0 address: %p\n", &data_char0);              |   data_char0 address: 0xaaaacdfe1038
@@ -253,43 +254,34 @@ int main() {                                                    |
 ```
 Based on output, you can draw a diagram that visualizes the output:
 
-NOTE: In the Memory Layout Diagram, BSS segment is on top of Data segment
+NOTE: In the Memory Layout Diagram, BSS segment is on top of Data segment; 
+variables get stacked ontop of the last variable of that segment
+### [Visual](src/bss_data_variables.img) <- RM later 
 
 ```bash
 +────────────+
-| bss_char1  | 0xaaaacdfe103c
+| bss_char1  | 0xaaaacdfe103c   // same for bss_char1 with bss_char0; last variable in f'cn is here
 +────────────+
-| bss_char0  | 0xaaaacdfe103b
-+────────────+
+| bss_char0  | 0xaaaacdfe103b   // NOTE that the address grow 'up'; 
++────────────+                  // => BSS segment starts here, so bss_char0 gets put here since its before bss_char1
 |            | 0xaaaacdfe103a
 +────────────+
-| data_char1 | 0xaaaacdfe1039
+| data_char1 | 0xaaaacdfe1039   // data_char1 will come after data_char0 b/c its defined later;
 +────────────+
-| data_char0 | 0xaaaacdfe1038
+| data_char0 | 0xaaaacdfe1038   // => DATA segment starts here, so data_char0 gets put here since its before data
+_char1
 +────────────+
 ```
 
-There are a few important points to observe:
+### Why do we need a separate BSS segment and not just the data segment? 
 
-* As we can see, each variable takes up exactly one byte because of their type (`char`) that has the
-  size of one byte.
-* `data_char0` gets placed at a *lower* address than `data_char1` because we define `data_char0`
-  *before* `data_char1` in the program.
-* Similarly, `bss_char0` gets placed at a lower address than `bss_char1` due to the order of
-  definition in the program.
-* `data_char0` and `data_char1` are placed in the data segment (since they are initialized), and
-  `bss_char0` and `bss_char1` are placed in the BSS segment (since they are not initialized). We can
-  see this from their addresses---`bss_char0` and `bss_char` are placed on top of `data_char0` and
-  `data_char1`. (There is a one-byte gap in the output. The reason is that the linker automatically
-  adds some start-up code for a C program, which uses the BSS segment.)
+Answer: The BSS segment is automatically filled with zeros so we can still 
 
-Why do we need a separate BSS segment? Why can't it be just the data segment? The answer is that the
-BSS segment is automatically filled with zeros so we can still initialize uninitialized global and
-static variables. This helps ensure that these variables start with a known and predictable value.
+initialize uninitialized global and static variables. This helps ensure that 
 
-(You can stop recording and come back later, or continue with the next task.)
+these variables start with a known and predictable value.
 
-## Task 2: Understanding the Stack Segment
+## Task 2: Understanding the Stack Segment  - [MEMORY LAYOUT DIAGRAM](src/memory_layout_diagram.md)
 
 The stack segment, sometimes referred to as *the call stack* or just *the stack*, is the memory
 space where local variables and function arguments are stored. A typical program has multiple
