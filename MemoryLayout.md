@@ -1,5 +1,6 @@
 # Memory Layout
 
+* Based on A6 from Steven Ko CMPT 201 REPO
 * When you have a program as an executable, it is a file stored on your disk. However, when you run the program, your OS loads the program to the main memory and starts executing the program. 
 
     => This means that there exist two copies of the program when you run it---one copy on the disk and another copy in memory.
@@ -275,10 +276,8 @@ _char1
 
 ### Why do we need a separate BSS segment and not just the data segment? 
 
-Answer: The BSS segment is automatically filled with zeros so we can still 
-
+The BSS segment is automatically filled with zeros so we can still 
 initialize uninitialized global and static variables. This helps ensure that 
-
 these variables start with a known and predictable value.
 
 ## Task 2: Understanding the Stack Segment  - [MEMORY LAYOUT DIAGRAM](src/memory_layout_diagram.md)
@@ -288,20 +287,16 @@ space where local variables and function arguments are stored. A typical program
 functions, and the stack's size changes as different functions get called. Let's do a couple of
 activities to learn about this more. Make sure you `record` if you are not doing it already.
 
-### Stack Basics
-
-Create a file named `stack_basics.c` and write the code below. Also, add a new target `stack_basics`
-to the same Makefile from previous sections that produces an executable of the same name with `make
-stack_basics`.
+### Stack Basics - Stacks Grow Downward
 
 ```c
 #include <stdint.h>
 #include <stdio.h>
 
-void test0(void) {
-  int8_t local0 = 1;
-  int8_t local_array[3] = {2, 3, 4};
-  int8_t local1 = 5;
+void test0(void) { 
+  int8_t local0 = 1;    // placed in stack first
+  int8_t local_array[3] = {2, 3, 4}; // then the array; starting with 2 THEN 3 THEN 4
+  int8_t local1 = 5; // place last in stack
 
   printf("test0:\n");
   printf("  local0 address:         %p\n", &local0);
@@ -319,6 +314,11 @@ int main(void) {
 Compile and run it. You should get an output similar to the following:
 
 ```bash
+Notice the first item (local0) that got put in the stack has the highest address 
+and the last (local1) has the lowest. 
+
+=> This is b/c stack grows downwards 
+
 test0:
   local0 address:         0xffffdf138fbf
   local_array[0] address: 0xffffdf138fbc
@@ -343,16 +343,8 @@ You can visualize this as follows:
 +────────────────+
 ```
 
-These local variables are placed in the stack in the order of definition. However, the stack grows
-*downward*, meaning that a variable occupies a higher address first. In the above example, `local0`
-occupies the highest address above `local_array`. In turn, `local_array` occupies the next highest
-address above `local1`. Notice that for `local_array`, a lower index still occupies a lower address.
-
-Since all the variables are placed consecutively in the stack, we need to be careful when using
-pointers or arrays, as we can inadvertently access other variables. Add the following function to
-`stack_basics.c` and call the function from `main()`.
-
 ```c
+CONSIDER THIS EXAMPLE OPENING WITH THE SAME VARIABLES AND STORED VALUES AS ABOVE
 void test1(void) {
   int8_t local0 = 1;
   int8_t local_array[3] = {2, 3, 4};
@@ -361,21 +353,13 @@ void test1(void) {
   printf("test1:\n");
   printf("  local0 value: %d\n", local0);
 
-  local_array[3] = 24;
+  local_array[3] = 24;  // The array only has 3 elements; local_array[3] out of bounds
+                        // BUT we can still use it b/c an array in C is just a pointer.
+                        // => `local_array[3]` is simply `*(local_array + 3)`
 
   printf("  local0 value: %d\n", local0);
 }
 ```
-
-If you add this code, our linter will give a warning regarding the array usage. As the warning
-message says, `local_array` only has three elements. However, `local_array[3]` is accessing the 4th
-element, which `local_array` does not have by definition. Regardless, we can still use the
-expression `local_array[3]` because an array in C is nothing more than a convenient pointer.
-`local_array[3]` is simply `*(local_array + 3)`.
-
-Now, compile the code. The compiler will also give an array warning but we can ignore it for the
-sake of our activity. Run it and check the output.
-
 Excluding the output from `test0()`, your output should show the following:
 
 ```bash
@@ -391,22 +375,21 @@ that `local_array[3]` points to the memory address of `local0`. So when we assig
 
 ```bash
 +───────────────────────────────+
-| local0 (also, local_array[3]) | 0xffffdf138fbf
-+───────────────────────────────+
-| local_array[2]                | 0xffffdf138fbe
+| local0 (also, local_array[3]) | 0xffffdf138fbf    // local0 started as 1 THEN became 24 when we used 
++───────────────────────────────+                      local_array[3] to access it
+| local_array[2]                | 0xffffdf138fbe    
 +───────────────────────────────+
 | local_array[1]                | 0xffffdf138fbd
 +───────────────────────────────+
-| local_array[0]                | 0xffffdf138fbc
+| local_array[0]                | 0xffffdf138fbc    // local_array starts here 
 +───────────────────────────────+
 | local1                        | 0xffffdf138fbb
 +───────────────────────────────+
 ```
 
-In fact, this is a very common error called *array out of bounds*. As the name suggests, it is an
-error where an array variable is used to access memory locations outside the array's bounds.
+`Array out of bounds error` occurs where an array variable is used to access memory locations outside the array's bounds.
 
-Beside arrays, we can use any local variable to manipulate other local variables. Add the following
+We can use any local variable to manipulate other local variables. Add the following
 function and call it from `main()`.
 
 ```c
