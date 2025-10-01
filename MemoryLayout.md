@@ -237,40 +237,23 @@ static char *example_string;` // gets stored in the BSS segment.
 ```c
 #include <stdio.h>
 
-char bss_char0;
-char bss_char1;
-char data_char0 = '0';
-char data_char1 = '1';
-
-int main() {
-  printf("data_char0 address: %p\n", &data_char0);
-  printf("data_char1 address: %p\n", &data_char1);
-  printf("bss_char0 address:  %p\n", &bss_char0);
-  printf("bss_char1 address:  %p\n", &bss_char1);
+char bss_char0;                                                 |                       
+char bss_char1;                                                 |
+char data_char0 = '0';                                          |
+char data_char1 = '1';                                          |
+                                                                |               OUTPUT
+int main() {                                                    |
+  printf("data_char0 address: %p\n", &data_char0);              |   data_char0 address: 0xaaaacdfe1038
+  printf("data_char1 address: %p\n", &data_char1);              |   data_char1 address: 0xaaaacdfe1039
+  printf("bss_char0 address:  %p\n", &bss_char0);               |   bss_char0 address:  0xaaaacdfe103b
+  printf("bss_char1 address:  %p\n", &bss_char1);               |   bss_char1 address:  0xaaaacdfe103c
 
   return 0;
 }
 ```
+Based on output, you can draw a diagram that visualizes the output:
 
-Before compiling and running this code, look at the code and look at the diagram above to think
-about where these variables would be placed. Consider the fact that the data segment is for
-initialized global or static variables and the BSS segment is for uninitialized global or static
-variables.
-
-Now, let's compile and run it to see which addresses we get for these variables. In the same
-Makefile from the above [Text segment](#text-segment) section, add a new target named `data_and_bss`
-that produces an executable of the same name (`data_and_bss`). Once that's done, compile it and run
-it. You should get an output similar to the following:
-
-```bash
-data_char0 address: 0xaaaacdfe1038
-data_char1 address: 0xaaaacdfe1039
-bss_char0 address:  0xaaaacdfe103b
-bss_char1 address:  0xaaaacdfe103c
-```
-
-Based on this output, you can draw a diagram that visualizes how these are stored such as the
-following:
+NOTE: In the Memory Layout Diagram, BSS segment is on top of Data segment
 
 ```bash
 +────────────+
