@@ -142,29 +142,31 @@ RECALL: Dereference pointers to change value that the ptr is pointing to
         
         since arrays and pointers are interchangeable.
 
-## Task 0: Understanding the Text Segment
+## Understanding the Text Segment (Bottomost Layer)
 
-The OS loads the program itself to this segment, i.e., the text segment contains the (compiled) code
+The OS loads the program itself to this segment => i.e., the text segment contains the (compiled) code
 of the program. This means that your code resides somewhere in memory when you're running your
-program. In fact, we can examine the memory and print out your (compiled) code at run time.
+program. 
 
-Let's create a file named `main_dump.c` and write the following program. (Don't forget that you need
-to `record`.)
+In fact, we can examine the memory and print out your (compiled) code at run time.
+
 
 ```c
 #include <stdint.h>
 #include <stdio.h>
 
 int main(void) {
-  int (*main_ptr)(void); // Define a function pointer
-  main_ptr = &main; // Assign the address of main() to the pointer. If you'd
-                    // like, you can omit `&`.
+  int (*main_ptr)(void); // Define a function pointer pointing to main()=> f_returnTYPE (*f_ptr_NAME)(f_type)
+  main_ptr = &main; // Assign the address of main() to the pointer. If you'd ike, you can omit `&`.
+                    // f_ptr now points to main() first byte of code
+
   uint8_t *start_address =
-      (uint8_t *)main_ptr; // Cast it to an unsigned byte pointer for reading
+      (uint8_t *)main_ptr; // Cast it to an unsigned byte pointer for reading - uint8* denotes it is a byte pointer
 
   printf("Dumping memory from address %p:\n", start_address);
 
-  for (size_t i = 0; i < 64; i++) {
+  for (size_t i = 0; i < 64; i++) { // Starting at current address of pointer (start of main()), 
+                                    // => read the next 64 bytes of code in main()
     printf("%02X ", start_address[i]); // Hex formatting
 
     if ((i + 1) % 16 == 0) // Just print 16 bytes per line
@@ -178,44 +180,38 @@ int main(void) {
 In the first three lines of `main()`, we use C's [function pointer
 feature](https://en.wikipedia.org/wiki/Function_pointer) to get the address of the first byte of
 `main()`'s code, stored in the text segment in memory.
-* The first line demonstrates how to define a variable as a function pointer, since the syntax is
-  not like any other variable definitions. `int (*main_ptr)(void);` says two things---(i) `main_ptr`
-  is a variable that is a function pointer, and (ii) it points to a function that returns an integer
-  (`int` at the beginning) and takes no parameters (`(void)` at the end).
-* We define this function pointer exactly the same as `int main(void)`, except for the variable name
-  `main_ptr` and `*` to indicate that we're defining a function pointer. This is because we want
-  `main_ptr` to point to the function `main()`. This is in fact done in the second line, where we
-  assign the address of `main()` to `main_ptr`. This effectively means that `main_ptr` now has the
-  address of the first byte of `main()`'s code.
-* The third line casts the function pointer's type to a regular unsigned byte pointer type, so we
-  can easily access the values that it points to, byte by byte.
-* You can replace the first three lines with a single line, `uint8_t *start_address = (uint8_t
-  *)main;`. We're using those three lines for demonstration purposes.
-* The `for` loop performs 64 iterations, where each iteration reads one byte via `start_address[i]`.
-  (Notice that `start_address` is of type `uint8_t *` which means it is a byte pointer.) Since
-  `start_address[i]` reads the *i*th element from the address stored in `start_address`, and
-  `start_address` has the address of the function `main()`, the `for` loop effectively reads the
-  first 64 bytes of the code in the function `main()`.
-* The rest of the code is just printing and formatting, but one thing to note is that `%p` for
-  `printf()` is the format string to print out a pointer value, i.e., a memory address.
+* Defining a variable as a function pointer, 
+    => `int (*main_ptr)(void);`
+        
+        (i) `main_ptr` is a function pointer variable
 
-Now, write a Makefile that produces an executable named `main_dump` with `make main_dump`. Make sure
-you compile it with basic options, e.g., just `-o`, since we don't want the compiler to do extra
-things that could make it difficult to access the text segment. Once that's done, compile and run it
-to check the output. What's printed out is the first 64 bytes of `main()`'s compiled code loaded in
+        (ii) and it points to a function that returns an integer && takes no parameters
+
+            => (`'int' in 'int main(void)) && (`(void)` at the end).
+
+What's printed out is the first 64 bytes of `main()`'s compiled code loaded in
 the text segment in memory.
 
-How do we know if this is correct code? There's a utility called `objdump` that prints out what is
-in an executable. Similar to the memory layout, your executable (the file itself) is organized into
-sections with similar names as the memory layout, e.g., the text section, the data section, etc.
-`objdump` allows us to examine these sections. Enter `objdump -s <the name of the compiled
-executable>` or, for easy navigation, pipe the output to `less` (`objdump -s <the name of the
-compiled executable> | less`). It will show you what is in the executable, organized as sections.
+### How do we know if this is correct code? 
+
+* Use `objdump` to print contents of executable. 
+
+#### Executables 
+
+Executables (the file itself) are organized into sections with similar names as the memory layout, 
+
+    e.g., the text section, the data section, etc.
+
+`objdump` allows us to examine these sections. 
+
+`COMMAND: `objdump -s <the name of the compiled executable>`
+
+`OR BETTER COMMAND USE 'less': objdump -s <the name of the compiled executable> | less` will show the contents of executables, organized as sections.
+
+
 Look for the text section and look for the matching bytes that you get from running your code. You
 will find that all 64 bytes are present in the output of `objdump` in exactly the same order as our
 program prints out.
-
-(You can stop recording and come back later, or continue with the next task.)
 
 ## Task 1: Understanding the Data and BSS Segments
 
