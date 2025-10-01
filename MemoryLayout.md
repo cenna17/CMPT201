@@ -148,7 +148,7 @@ RECALL: Dereference pointers to change value that the ptr is pointing to
         
         since arrays and pointers are interchangeable.
 
-## Understanding the Text Segment (Bottomost Layer)
+## Understanding the Text Segment (Bottomost Layer) [MEMORY LAYOUT DIAGRAM](memory_layout_diagram.md)
 
 The OS loads the program itself to this segment => i.e., the text segment contains the (compiled) code
 of the program. This means that your code resides somewhere in memory when you're running your
@@ -212,14 +212,14 @@ Executables (the file itself) are organized into sections with similar names as 
 
 `COMMAND: `objdump -s <the name of the compiled executable>`
 
-`OR BETTER COMMAND USE 'less': objdump -s <the name of the compiled executable> | less` will show the contents of executables, organized as sections.
+`OR BETTER USE COMMAND 'less': objdump -s <the name of the compiled executable> | less` will show the contents of executables, organized as sections.
 
 
 Look for the text section and look for the matching bytes that you get from running your code. You
 will find that all 64 bytes are present in the output of `objdump` in exactly the same order as our
 program prints out.
 
-## Task 1: Understanding the Data and BSS Segments
+## Understanding the Data and BSS Segments (Layer Above Text) [MEMORY LAYOUT DIAGRAM](memory_layout_diagram.md)
 
 The data and BSS segments store the values for static variables in a program. The data segment
 stores *initialized* global or static variables, while the BSS segment stores *uninitialized* global
