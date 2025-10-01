@@ -148,7 +148,7 @@ RECALL: Dereference pointers to change value that the ptr is pointing to
         
         since arrays and pointers are interchangeable.
 
-## Understanding the Text Segment (Bottomost Layer) [MEMORY LAYOUT DIAGRAM](memory_layout_diagram.md)
+## Understanding the Text Segment (Bottomost Layer) - [MEMORY LAYOUT DIAGRAM](memory_layout_diagram.md)
 
 The OS loads the program itself to this segment => i.e., the text segment contains the (compiled) code
 of the program. This means that your code resides somewhere in memory when you're running your
@@ -219,16 +219,20 @@ Look for the text section and look for the matching bytes that you get from runn
 will find that all 64 bytes are present in the output of `objdump` in exactly the same order as our
 program prints out.
 
-## Understanding the Data and BSS Segments (Layer Above Text) [MEMORY LAYOUT DIAGRAM](memory_layout_diagram.md)
+## Understanding the Data and BSS Segments (Layer Above Text) - [MEMORY LAYOUT DIAGRAM](memory_layout_diagram.md)
 
-The data and BSS segments store the values for static variables in a program. The data segment
-stores *initialized* global or static variables, while the BSS segment stores *uninitialized* global
-or static variables. For example, if you have `static char *example_string = "This is
-initialized.\n";` somewhere in your program, it gets stored in the data segment. On the other hand,
-if you have `static char *example_string;` somewhere in your program, it gets stored in the BSS
-segment. Let's do an activity to understand this better. Make sure you `record`.
+* Data and BSS segments store the values for global or static variables in a program. 
 
-Create a file named `data_and_bss.c` and write the following code.
+    => Data Stores *initialized* variables
+    
+    => BSS segment stores *uninitialized* variables. 
+
+``` Example:
+
+static char *example_string = "This is initialized.\n";` // gets stored in the data segment. 
+
+static char *example_string;` // gets stored in the BSS segment.
+```
 
 ```c
 #include <stdio.h>
