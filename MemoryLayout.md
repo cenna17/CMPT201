@@ -257,7 +257,8 @@ Based on output, you can draw a diagram that visualizes the output:
 
 NOTE: In the Memory Layout Diagram, BSS segment is on top of Data segment; 
 variables get stacked ontop of the last variable of that segment
-### [Visual](src/bss_data_variables.img) <- RM later 
+
+[Visual](src/memory_layout_bss_data_variables.jpeg) 
 
 ```bash
 +────────────+
@@ -398,46 +399,39 @@ void test2(void) {
   int8_t local0 = 5;
 
   printf("test2:\n");
-  printf("  local_array[1] value: %d\n", local_array[1]);
+  printf("  local_array[1] value: %d\n", local_array[1]);       //prints 3
 
-  int8_t *ptr = &local0 + 2; // This points to `local_array[1]`
-  *ptr = 36;
+  int8_t *ptr = &local0 + 2; // This points to `local_array[1]` // pointing at the box that stores 3
+  *ptr = 36;                 // 3 -> 36
 
   printf("  local_array[1] value: %d\n", local_array[1]);
 }
 ```
-
-Before running this code, think about what the output will be. The first `printf()` should print out
-the value of `local_array[1]`. How about the second `printf()`? In `int8_t *ptr = &local0 + 2;` we
-are adding 2 to the address of `local0`, which is the location for `local_array[1]`. Since `ptr`
-points to `local_array[1]`, `*ptr = 36;` should assign 36 to `local_array[1]`. We can visualize this
-again.
+We can visualize this again.
 
 ```bash
 +──────────────────────────────────+
-| local_array[2]                   | 0xffffdf138fbe
+| local_array[2]                   | 0xffffdf138fbe     <-- stores 4
 +──────────────────────────────────+
-| local_array[1] (or *(&local0+2)) | 0xffffdf138fbd
+| local_array[1] (or *(&local0+2)) | 0xffffdf138fbd     <-- stores 3 ; later becomes 36
 +──────────────────────────────────+
-| local_array[0]                   | 0xffffdf138fbc
+| local_array[0]                   | 0xffffdf138fbc     <-- stores 2
 +──────────────────────────────────+
-| local0                           | 0xffffdf138fbb
+| local0                           | 0xffffdf138fbb     <-- stores 5
 +──────────────────────────────────+
 ```
-
+#### Important: Stack Corruption
 The important point here is that it is possible to use a local variable's address to access other
 local variables. This often causes problems, generally called *stack corruption*---you access stack
 locations unintentionally and corrupts the stack. Thus, we need to be extremely careful when using
 arrays and pointers.
 
-(You can stop recording and come back later, or continue on.)
-
 ### Stack with Function Calls
 
-The stack not only stores local variables but also stores arguments passed for function calls. Since
-there are potentially many function calls, the stack organizes a function's local variables and
-arguments in a place called a *stack frame*. Whenever there is a new function call, the stack
-creates a new stack frame and stores local variables, arguments, and other things necessary.
+* The stack not only stores local variables but also stores arguments passed for function calls. There are potentially many function calls.
+
+`Stack Frame` is created by the stack to store and organize local variables of functions.
+    => New function call, the stack -> new stack frame and stores local variables, arguments, and other things necessary.
 
 The stack with stack frames looks like the following.
 
@@ -505,22 +499,18 @@ that makes a function call (caller) and the function that gets invoked (callee).
 
 * Function arguments occupy the highest-addressed region of a stack frame. (This is traditionally
   called the *bottom* of the stack.)
-* A stack frame saves the *return address*, which points to the caller's code that needs to be
+
+* A stack frame saves the `return address`, which points to the caller's code that needs to be
   executed right after the function call returns. This is necessary to remember where to go back
   when the callee's code execution is done.
-* A stack frame also saves the *previous frame pointer*, which points to the stack frame of the
+
+* A stack frame also saves the `previous frame pointer`, which points to the stack frame of the
   caller. This is necessary when popping the callee's stack frame after the callee's code execution
   is done.
 
 The important point here is again the same point made earlier. Since these are all stored in the
 same memory region, it is possible to use arrays/pointers of local variables to access other stack
-frames, leading to potential stack corruption. Let's do an activity to understand this more. Make
-sure you `record` if you are not doing it already.
-
-Create a file named `stack_frames.c` and write the code below. Also, add a new target `stack_frames`
-to the same Makefile from previous sections that produces an executable of the same name with `make
-stack_frames`. We will first print out the addresses of the variables in the program to understand
-where they are located in the stack.
+frames, leading to potential stack corruption. `SEE BELOW understand this more.`
 
 ```c
 #include <stdint.h>
@@ -532,7 +522,7 @@ void foo(uint8_t argument) {
 }
 
 int main(void) {
-  uint8_t main_local = 32;
+  uint8_t main_local = 32; // uint_8 is 1 byte but stack allocates 16 bytes for it (see below)
   foo(main_local);
   printf("Local variable address in main: %p\n", &main_local);
 }
@@ -544,47 +534,51 @@ Compile and run the program. You will get an output similar to the following:
 Local variable address in foo:  0xffffd064d30e
 Local variable address in main: 0xffffd064d32f
 ```
+#### See pic below for visual of description 
+*The address difference is 0x21 or 33 bytes. Understanding this requires an in-depth discussion about
+how things work, which we won't get into here. 
+*Our container uses a 64-bit CPU and a `stack allocation always takes up a multiple of 16 bytes` for faster execution. 
 
-The address difference is 0x21 or 33 bytes. Understanding this requires an in-depth discussion about
-how things work, which we won't get into here. But briefly, our container uses a 64-bit CPU and a
-stack allocation always takes up a multiple of 16 bytes for faster execution. Thus, in order to
-store `uint8_t main_local` in `main()`, the stack allocates 16 bytes instead of one byte. After
-that, the return address and the previous frame pointer shown in the diagram above take up 8 bytes
+    => Thus, to store `uint8_t main_local` in `main()`, the stack allocates 16 bytes instead of one byte. 
+    
+
+* After the `return address and the previous frame pointer` shown in the diagram above `take up 8 bytes`
 each. Lastly, `uint8_t argument` takes up another one byte. Thus, those four variables take up 33
 bytes in the stack. The local variable `uint8_t foo_local` comes after those variables in the stack,
 so the address difference between `uint8_t foo_local` and `uint8_t main_local` is 33 bytes.
 
+[stack layout pic](src/memory_layout_stack_with_function_calls_code.jpeg)
+
 Needless to say, misusing arrays or pointers with `uint8_t foo_local` in `foo()` can affect `uint8_t
 argument`, the return address, the previous frame pointer, and `uint8_t main_local`. In fact, this
-can cause a very serious problem known as *stack buffer overflow attack*, where the return address
-is replaced with an address that points to a malicious piece of code by overflowing a buffer. The
-simplest example, though not an actual attack, is something like the following:
+can cause a very serious problem known as: 
 
+`stack buffer overflow attack`, where the return address is replaced with an address that points to a 
+malicious piece of code by overflowing a buffer. 
+
+The simplest example, though not an actual attack, is something like the following:
 ```c
 #include <stdio.h>
 
 int main(void) {
-  char buffer[5] = {0};
-  scanf("%s", buffer);
+  char buffer[5] = {0};     // 5 bytes
+  scanf("%s", buffer);      // The input string is too long (22 bytes) => segmentation error && buffer overflowed
 }
 ```
 
 Create a file named `buffer_overflow.c` and write the above code. You will immediately see that our
-linter complains about `scanf()` being insecure, which is exactly what this example is about. Add a
-new target for `make buffer_overflow` to produce an executable named `buffer_overflow`. Compile and
-run it. `scanf()` requires an input, so provide `this-is-a-long-string` as an input. It is going to
-cause a segmentation fault.
+linter complains about `scanf()` being insecure, which is exactly what this example is about. 
 
-Before looking into the problem further, there is one important thing to mention. Since this is a
-common, yet serious problem, there is a sanitizer that detects this problem. In the Makefile, add a
-new target named `buffer_overflow_sanitizer`, that produces an executable of the same name. There,
-enable the `AddressSanitizer` by adding a compiler option `-fsanitize=address`. Compile and run it.
+Give `scanf()` the input `this-is-a-long-string` It is going to cause a segmentation fault.
+
+##### Important 
+Since this is a common, yet serious problem, there is a sanitizer that detects this problem. 
+
+Use `-fsanitize=address` to enable AddressSanitizer flag.
+
 Provide the same input `this-is-a-long-string`. It should immediately show a long error message that
 explains the stack buffer overflow error.
 
-Now, the reason for this problem is that the size of `buffer` is 5 bytes and `this-is-a-long-string`
-is 22 bytes, which is clearly more than 5 bytes. When `scanf()` stores it in `buffer`, it
-*overflows* and overruns the stack as follows.
 
 ```bash
 +─────+
@@ -609,32 +603,26 @@ is 22 bytes, which is clearly more than 5 bytes. When `scanf()` stores it in `bu
 ```
 
 Other standard library functions that read user inputs, e.g., `gets()`, or copy memory, e.g.,
-`strcpy()`, have similar problems and their use is explicitly discouraged or warned. For example, if
-you look at the man page of `gets()` (`man gets`), you will see that the description says *Never
-use this function*. Similarly, the man page of `strcpy()` says *Beware  of  buffer overruns!*.
-You can use safer alternatives, such as `fgets()` or `strncpy()`, where you need to specify the size
-that you want. (Of course, you need to provide the right size to be safe.)
+`strcpy()`, have similar problems and their use is explicitly discouraged or warned. 
+
+The man page of `gets()` (`man gets`), says `Never use this function`. 
+The man page of `strcpy()` says `Beware  of  buffer overruns!`.
+
+`Safer alternatives: fgets() or strncpy()` 
+
+NOTE: You will need to specify the size for these funcitons (Of course, you need to provide the right size to be safe.)
 
 It is also important to keep in mind that you don't have an unlimited stack. In fact, allocating too
-much memory with your local variables will cause a *stack overflow* error. To test this, create a
-file named `stack_overflow.c` and write the code below. Also, add a new target `stack_overflow` to
-the same Makefile from previous sections that produces an executable of the same name with `make
-stack_overflow`. When doing so, add a compiler option `-fsanitize=address` to enable the
-`AddressSanitizer`.
+much memory with your local variables will cause a *stack overflow* error. Compile and run the code 
+below with `-fsanitize=address` to enable the `AddressSanitizer`.
 
 ```c
-int main(void) { char a[1048 * 1048 * 8] = {0}; }
+int main(void) { char a[1048 * 1048 * 8] = {0}; }   // stackoverflow; the stack ran out of memory for a[]
 ```
 
-Compile it, run it, and check the error message shown by the `AddressSanitizer`. It will explain the
-detected stack overflow error. As you can see, it does not take a lot to trigger a stack overflow
-error.
-
-You can check the various limits by a system call named `getrlimit()`. You can read about how to use
-it with `man getrlimit`.
-
-Once everything is done, make sure you stop recording. In the next assignment, we will continue the
-discussion on Linux's memory layout.
+Error message shown by the `AddressSanitizer` explains detected stack overflow error. 
+`Use getlimit()` to check the capacity you can allocate.  It does not take a lot to trigger a stack overflow
+error but the limit varies across systems.
 
 ## Stack Protection
 
@@ -643,35 +631,3 @@ GCC and Clang provide stack protection mechanisms. [This
 article](https://developers.redhat.com/articles/2022/06/02/use-compiler-flags-stack-protection-gcc-and-clang)
 discusses the mechanisms in detail. It is a good read to understand the available features for stack
 protection.
-
-## Submission
-
-Make sure you use git to push all the files/directories you created, including `.nvim/` and
-`.record/`, for grading.
-
-As with previous assignments, make sure you run either `a6-checker.amd64` or `a6-checker.arm64` and
-perform some minimal basic checks. A few things to note about the checker:
-* It warns you if you do not have any recording files. Generally, if you do not record your work
-  sessions, you will receive a 0.
-* It warns you if it detects that you have not used `nvim`. Generally, if you do not use `nvim` for
-  your work, you will receive a 0.
-* It warns you if it detects any copy-and-paste actions. Generally, if you copy and paste anything,
-  you will receive a 0.
-* It performs some basic checks for your progress and tells you about it.
-* It is important to understand that the checker is not a grader and only performs minimal basic
-  checks for you. We only provide it to make sure that you do not make any silly mistakes that could
-  lead to an unexpected grade, e.g., a 0 or a very low grade. However, if it says that everything is
-  good, and you have faithfully done the tasks above, you can be assured that you will get the full
-  credit.
-* Note that if a check fails, it does not always tell you why. You need to debug it by yourself and
-  find out.
-* It is entirely *your responsibility* to run the checker before submitting your work.
-
-# Next Steps
-
-You need to accept the invite for the next assignment (A7).
-
-* Get the URL for A7. Go to the URL on your browser.
-* Accept the invite for Assignment 7 (A7).
-* If you are not in `units/03-memory` directory, go to that directory.
-* Clone the assignment repo.
