@@ -258,7 +258,7 @@ Based on output, you can draw a diagram that visualizes the output:
 NOTE: In the Memory Layout Diagram, BSS segment is on top of Data segment; 
 variables get stacked ontop of the last variable of that segment
 
-[Visual](src/memory_layout_bss_data_variables.jpeg) 
+![Visual](src/memory_layout_bss_data_variables.jpeg) 
 
 ```bash
 +────────────+
@@ -547,7 +547,7 @@ each. Lastly, `uint8_t argument` takes up another one byte. Thus, those four var
 bytes in the stack. The local variable `uint8_t foo_local` comes after those variables in the stack,
 so the address difference between `uint8_t foo_local` and `uint8_t main_local` is 33 bytes.
 
-[stack layout pic](src/memory_layout_stack_with_function_calls_code.jpeg)
+![stack layout pic](src/memory_layout_stack_with_function_calls_code.jpeg)
 
 Needless to say, misusing arrays or pointers with `uint8_t foo_local` in `foo()` can affect `uint8_t
 argument`, the return address, the previous frame pointer, and `uint8_t main_local`. In fact, this
