@@ -85,9 +85,11 @@ Before examining the diagram in more detail, there are a few things to note.
 * Pointers store a memory address eg) `int *ptr = 0` => `ptr` now holds the memory
   address 0 as its value. There are a few things to note here.
     * `T *ptr` means `ptr` is a variable of `type T` 
+
         `eg) int *ptr => ptr is of type int*`
 
     * A pointer has a size limit according to the size of its type.
+    
         eg) The values of `int32_t i` uses 32-bits 
                 => the range for `i` is -2^31 (`INT32_MIN`) to 2^31-1 (`INT32_MAX`). 
         
@@ -102,11 +104,15 @@ Before examining the diagram in more detail, there are a few things to note.
     * This effectively means the size of a pointer type limits the size of the memory
       space that a program can use. 
       
-      For a 32-bit pointer, since its value can only range between 0
-      and 2^32-1, the range of memory addresses must be between 0 and 2^32-1. This effectively
-      limits the size of the memory address space. Since each address is byte addressable and 2^32
-      is 4 * 2^30, a 32-bit pointer can identify 4GB (gigabytes) of memory. In case of a 64-bit
-      pointer (16 * 2^60), it is 16 exabytes.
+      32-bit can only range values between 0 and 2^32-1, 
+
+        => the range of memory addresses must be between 0 and 2^32-1. 
+        
+        => This effectively limits the size of the memory address space to 4GB. 
+        
+        Since each address is byte addressable and 2^32 is 4 * 2^30, a 32-bit pointer can identify 4GB (gigabytes) of memory. 
+        
+        In case of a 64-bit pointer (16 * 2^60), it is 16 exabytes.
 
 * We can `use + OR - operations` to move the address a pointer points to in memory.
     => Thereby, changing the thing that the pointer is pointing to.
